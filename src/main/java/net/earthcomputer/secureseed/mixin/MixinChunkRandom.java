@@ -3,7 +3,6 @@ package net.earthcomputer.secureseed.mixin;
 import net.earthcomputer.secureseed.Globals;
 import net.earthcomputer.secureseed.Hashing;
 import net.earthcomputer.secureseed.IChunkRandom;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.gen.ChunkRandom;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -66,8 +65,8 @@ public class MixinChunkRandom extends Random implements IChunkRandom {
     public void secureseed_setSeed(long[] worldSeed, int x, int z, int dimension, int typeSalt, long salt) {
         System.arraycopy(worldSeed, 0, this.worldSeed, 0, Globals.WORLD_SEED_LONGS);
         message[0] = ((long) x << 32) | ((long) z & 0xffffffffL);
-        message[1] = ((long) dimension << 32) | ((long) salt & 0xffffffffL);
-        message[2] = typeSalt;
+        message[1] = ((long) dimension << 32) | ((long) typeSalt & 0xffffffffL);
+        message[2] = salt;
         message[3] = counter = 0;
         randomBitIndex = MAX_RANDOM_BIT_INDEX;
         secureSeeded = true;
@@ -85,6 +84,12 @@ public class MixinChunkRandom extends Random implements IChunkRandom {
 
     @Unique
     private long getBits(int count) {
+        if (count < 0 || count > 64) {
+            throw new IllegalArgumentException("count must be in [0, 64], got " + count);
+        }
+        if (count == 0) {
+            return 0;
+        }
         if (!secureSeeded) {
             throw new IllegalStateException("Using unseeded ChunkRandom");
         }
@@ -96,21 +101,18 @@ public class MixinChunkRandom extends Random implements IChunkRandom {
 
         int alignment = randomBitIndex & 63;
         if ((randomBitIndex >>> 6) == ((randomBitIndex + count) >>> 6)) {
-            long result = (randomBits[randomBitIndex >>> 6] >>> alignment) & ((1L << count) - 1);
+            long result = randomBits[randomBitIndex >>> 6] >>> alignment;
+            if (count != 64) {
+                result &= (1L << count) - 1;
+            }
             randomBitIndex += count;
             return result;
         } else {
-            long result = (randomBits[randomBitIndex >>> 6] >>> alignment) & ((1L << (64 - alignment)) - 1);
-            randomBitIndex += count;
-            if (randomBitIndex >= MAX_RANDOM_BIT_INDEX) {
-                moreRandomBits();
-                randomBitIndex -= MAX_RANDOM_BIT_INDEX;
-            }
-            alignment = randomBitIndex & 63;
-            result <<= alignment;
-            result |= (randomBits[randomBitIndex >>> 6] >>> (64 - alignment)) & ((1L << alignment) - 1);
-
-            return result;
+            int lowerCount = 64 - alignment;
+            long lower = randomBits[randomBitIndex >>> 6] >>> alignment;
+            randomBitIndex += lowerCount;
+            long upper = getBits(count - lowerCount);
+            return lower | (upper << lowerCount);
         }
     }
 
@@ -148,11 +150,14 @@ public class MixinChunkRandom extends Random implements IChunkRandom {
     @Override
     public int nextInt(int bound) {
         if (!secure) return super.nextInt(bound);
+        if (bound <= 0) {
+            throw new IllegalArgumentException("bound must be positive");
+        }
 
-        int bits = MathHelper.log2DeBruijn(bound);
+        int bits = 32 - Integer.numberOfLeadingZeros(bound - 1);
         int result;
         do {
-            result = (int) getBits(bits);
+            result = bits == 0 ? 0 : (int) getBits(bits);
         } while (result >= bound);
 
         return result;

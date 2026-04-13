@@ -57,6 +57,6 @@ public class MixinMoreOptionsDialog implements IMoreOptionsDialog {
 
     @Override
     public void secureseed_setSeed(long[] seed) {
-        this.secureSeed = seed;
+        this.secureSeed = seed == null ? null : seed.clone();
     }
 }

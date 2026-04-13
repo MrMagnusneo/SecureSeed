@@ -35,12 +35,12 @@ public class MixinGeneratorOptions implements IGeneratorOptions {
 
     @Override
     public long[] secureseed_getSeed() {
-        return secureSeed;
+        return secureSeed == null ? null : secureSeed.clone();
     }
 
     @Override
     public void secureseed_setSeed(long[] seed) {
-        this.secureSeed = seed;
+        this.secureSeed = seed == null ? null : seed.clone();
         if (seed != null) this.seed = seed[0];
     }
 
@@ -81,7 +81,7 @@ public class MixinGeneratorOptions implements IGeneratorOptions {
     @Inject(method = "fromProperties", at = @At("RETURN"))
     private static void parseSecureSeedFromLevelProperties(DynamicRegistryManager registryManager, Properties properties, CallbackInfoReturnable<GeneratorOptions> ci) {
         String seedStr = properties.getProperty("level-seed");
-        long[] seed = seedStr.isEmpty() ? Globals.createRandomWorldSeed() : Globals.parseSeed(seedStr);
+        long[] seed = seedStr == null || seedStr.isEmpty() ? Globals.createRandomWorldSeed() : Globals.parseSeed(seedStr);
         ((IGeneratorOptions) ci.getReturnValue()).secureseed_setSeed(seed);
     }
 }

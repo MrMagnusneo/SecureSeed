@@ -33,9 +33,15 @@ public class Hashing {
     }
 
     public static void hash(long[] message, long[] chainValue, long[] internalState, long messageOffset, boolean isFinal) {
-        assert message.length == 16;
-        assert chainValue.length == 8;
-        assert internalState.length == 16;
+        if (message.length != 16) {
+            throw new IllegalArgumentException("message must have length 16");
+        }
+        if (chainValue.length != 8) {
+            throw new IllegalArgumentException("chainValue must have length 8");
+        }
+        if (internalState.length != 16) {
+            throw new IllegalArgumentException("internalState must have length 16");
+        }
 
         System.arraycopy(chainValue, 0, internalState, 0, chainValue.length);
         System.arraycopy(blake2b_IV, 0, internalState, chainValue.length, 4);

@@ -10,11 +10,11 @@ java {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = project.property('java_release_1_21_10') as int
+    options.release = project.property('java_release_1_20_1') as int
 }
 
 base {
-    archivesName = "${project.archives_base_name}-mc1.21.10"
+    archivesName = "${project.archives_base_name}-mc1.20.1"
 }
 
 dependencies {

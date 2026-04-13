@@ -3,6 +3,16 @@ State-of-the-art cryptography to protect your world seed against seed cracking t
 
 This mod is written for the Fabric Mod Loader. If you have advanced knowledge on coding Spigot plugins, help with porting this to Spigot would be greatly appreciated.
 
+## Project layout
+- `common`: shared code that does not depend on a specific Minecraft version (hashing, seed constants, seed parsing utilities, shared interfaces).
+- `fabric-1.16.5`: current working Fabric implementation for Minecraft 1.16.5.
+- `fabric-1.21.10`: Loom-based port start for Minecraft 1.21.10 with shared seed logic already wired.
+
+Security baseline:
+- World seed size is currently 1024 bits.
+- A runtime guard enforces exactly 1024 bits.
+- Supported version range is codified in `common` as `1.16.5` through `1.21.10`.
+
 ## How does it work?
 1. Increased the number of bits in the world seed from 64 to 1024. Although cracking a 64-bit seed with the other anti-seed-cracking measures is likely infeasible at the moment without access to a huge datacenter, we cannot rule out this possibility from the future, 1024 bits is likely to be safe for a *very* long time.
 1. Changed the random number generators from LCGs (and the homebrew RNG in the biome generator) to a fast cryptographically secure RNG based on the [BLAKE2](https://en.wikipedia.org/wiki/BLAKE_(hash_function)) secure hashing algorithm. This has a minor negative impact on performance of world gen, but ensures that players cannot derive any information about the world other than the blocks they can already see.

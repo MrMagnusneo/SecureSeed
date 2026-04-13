@@ -3,12 +3,10 @@ package net.earthcomputer.secureseed;
 import com.google.common.collect.Iterables;
 import net.minecraft.server.world.ServerWorld;
 
-import java.math.BigInteger;
-import java.security.SecureRandom;
-
 public class Globals {
-    public static final int WORLD_SEED_LONGS = 16;
-    public static final int WORLD_SEED_BITS = WORLD_SEED_LONGS * 64;
+    public static final int WORLD_SEED_LONGS = SeedConstants.WORLD_SEED_LONGS;
+    public static final int WORLD_SEED_BITS = SeedConstants.WORLD_SEED_BITS;
+    public static final int REQUIRED_WORLD_SEED_BITS = SeedConstants.REQUIRED_WORLD_SEED_BITS;
 
     public static final long[] worldSeed = new long[WORLD_SEED_LONGS];
     public static final ThreadLocal<Integer> dimension = ThreadLocal.withInitial(() -> 0);
@@ -45,43 +43,14 @@ public class Globals {
     }
 
     public static long[] createRandomWorldSeed() {
-        long[] seed = new long[WORLD_SEED_LONGS];
-        SecureRandom rand = new SecureRandom();
-        for (int i = 0; i < WORLD_SEED_LONGS; i++) {
-            seed[i] = rand.nextLong();
-        }
-        return seed;
+        return SeedUtils.createRandomWorldSeed();
     }
 
     public static long[] parseSeed(String seedStr) {
-        long[] seed = new long[WORLD_SEED_LONGS];
-        try {
-            BigInteger seedBigInt = new BigInteger(seedStr);
-            if (seedBigInt.signum() < 0) {
-                seedBigInt = seedBigInt.and(BigInteger.ONE.shiftLeft(WORLD_SEED_BITS).subtract(BigInteger.ONE));
-            }
-            for (int i = 0; i < WORLD_SEED_LONGS; i++) {
-                BigInteger[] divRem = seedBigInt.divideAndRemainder(BigInteger.ONE.shiftLeft(64));
-                seed[i] = divRem[1].longValue();
-                seedBigInt = divRem[0];
-            }
-        } catch (NumberFormatException e) {
-            seed[0] = seedStr.hashCode();
-        }
-
-        return seed;
+        return SeedUtils.parseSeed(seedStr);
     }
 
     public static String seedToString(long[] seed) {
-        BigInteger seedBigInt = BigInteger.ZERO;
-        for (int i = WORLD_SEED_LONGS - 1; i >= 0; i--) {
-            BigInteger val = BigInteger.valueOf(seed[i]);
-            if (val.signum() < 0) {
-                val = val.add(BigInteger.ONE.shiftLeft(64));
-            }
-            seedBigInt = seedBigInt.shiftLeft(64).add(val);
-        }
-
-        return seedBigInt.toString();
+        return SeedUtils.seedToString(seed);
     }
 }

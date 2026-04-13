@@ -28,6 +28,9 @@ public class Hashing {
     public static long[] hashWorldSeed(long[] worldSeed) {
         long[] result = blake2b_IV.clone();
         result[0] ^= 0x01010040;
+        if (worldSeed.length != SeedConstants.WORLD_SEED_LONGS) {
+            throw new IllegalArgumentException("worldSeed must have length " + SeedConstants.WORLD_SEED_LONGS);
+        }
         hash(worldSeed, result, new long[16], 0, false);
         return result;
     }

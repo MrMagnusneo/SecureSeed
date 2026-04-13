@@ -1,6 +1,6 @@
 pluginManagement {
     repositories {
-        jcenter()
+        mavenCentral()
         maven {
             name = 'Fabric'
             url = 'https://maven.fabricmc.net/'
@@ -8,3 +8,9 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
+rootProject.name = 'SecureSeed'
+
+include 'common'
+include 'fabric-1.16.5'
+include 'fabric-1.21.10'

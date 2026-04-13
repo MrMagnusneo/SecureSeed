@@ -3,8 +3,13 @@ plugins {
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(java_version as int)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 8
 }
 
 jar {
